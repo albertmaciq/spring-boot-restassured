@@ -1,0 +1,126 @@
+pipeline {
+    agent any
+
+    environment {
+        credential_sonar = 'sonar'
+        credential_nexus = 'nexus'
+        sonar_url = 'http://sonar.tms-dev.52.209.128.30.nip.io'
+	REGISTRY="harbor.tyc.vass.es"
+        PROJECT_NAME="spring-boot-restassured"
+	POM="greeting-module/pom.xml"
+	APP_NAME="greeting-module"
+	APP_DIR="${APP_NAME}/k8s"
+	//PROJECT_HARBOR="vassradarprueba"
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    withMaven(maven: 'maven-3', mavenSettingsConfig: '5845d9d5-c4bb-4340-ae40-a0a9bed728be', jdk: 'jdk11') {
+                        sh 'mvn clean package -pl greeting-module -DskipTests=true'
+                    }
+                }
+            }
+        }
+        stage('test') {
+            steps {
+                script {
+                    withMaven(maven: 'maven-3', mavenSettingsConfig: '5845d9d5-c4bb-4340-ae40-a0a9bed728be', jdk: 'jdk11') {
+                        sh 'mvn test -pl greeting-module'
+                    }
+                }
+            }
+        }
+	    stage ('Generate Image'){
+	        steps {
+	            script {
+	                withMaven(maven: 'maven-3', mavenSettingsConfig: '5845d9d5-c4bb-4340-ae40-a0a9bed728be', jdk: 'jdk11') {
+                        sh 'mvn clean spring-boot:build-image -pl greeting-module'
+                    }
+	            }
+	        }
+	    }
+    	stage('create project harbor') {
+            when {
+                expression {
+		    //PROJECT_NAME="${PROJECT_HARBOR}"
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins', usernameVariable: 'USER', passwordVariable: 'PASS']]) {
+                    	project=sh(returnStdout: true, script: """curl -k -s -X GET "https://harbor.tyc.vass.es/api/v2.0/projects" -H "accept: application/json" -u '${USER}:${PASS}' | grep \\"name\\":\\"${PROJECT_NAME}\\" | wc -l """).trim()
+                    	}
+
+                    if (project == '0') {
+                        return true
+                    } else {
+                        return false
+                    }
+                }
+            }
+            steps {
+                script {
+                	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins', usernameVariable: 'USER', passwordVariable: 'PASS']]) {
+                    sh """
+                    curl -k -s -X POST "https://harbor.tyc.vass.es/api/v2.0/projects" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \\"project_name\\": \\"${PROJECT_NAME}\\", \\"public\\": true}" -u '${USER}:${PASS}'
+                    """
+                    }
+                }
+            }
+        }
+	    stage ('datos pom') {
+	        steps {
+		        script {
+		            pom = readMavenPom file: POM
+		            version=pom.parent.version
+		            name=pom.artifactId
+		            image="${REGISTRY}/${PROJECT_NAME}/${name}:${version}"
+		            echo "${image}"
+		        }
+	        }
+	    }
+	    /*
+	    stage ('tag image para pruebas') {
+	        steps {
+		        script {
+		            imagen_oficial="harbor.tyc.vass.es/vass-radar-app/vassradar2:0.0.1-SNAPSHOT"
+		            sh "docker tag ${imagen_oficial} ${image}"
+		        }
+	        }
+	    }*/
+	    stage ('push to harbor') {
+	        steps {
+		        script {
+		            withCredentials([usernamePassword(credentialsId: 'harbor-jenkins', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+               		    sh """
+                         	    docker login https://${REGISTRY} -u ${USERNAME} -p ${PASSWORD}
+               		    """
+			            sh " docker push ${image} "
+		            }
+		        }
+	        }
+	    }
+	    stage ('Deploy to EKS') {
+	        steps {
+		        sh """
+			        kubectl -n ${PROJECT_NAME} apply -f ${APP_DIR}/
+			        kubectl -n ${PROJECT_NAME} rollout restart deployment ${APP_NAME}
+		        """
+	        }
+	    }
+	    stage('REST-assured test') {
+            steps {
+                sleep 45
+                script {
+                    withMaven(maven: 'maven-3', mavenSettingsConfig: '5845d9d5-c4bb-4340-ae40-a0a9bed728be', jdk: 'jdk11') {
+                        sh 'mvn clean test -pl restassured'
+                    }
+                }
+            }
+        }
+    }
+
+    post ('clean') {
+        always {
+            cleanWs()
+        }
+    }
+}
