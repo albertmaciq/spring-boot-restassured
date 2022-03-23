@@ -13,7 +13,7 @@ public class RestAssuredGreetingTest {
 
         // when
         String foundGreeting = given()
-                .post("https://spring-boot-restassured.52.209.128.30.nip.io/",expectedGreeting)
+                .post("https://spring-boot-restassured.52.209.128.30.nip.io/")
                 .then()
                 .extract()
                 .body()
