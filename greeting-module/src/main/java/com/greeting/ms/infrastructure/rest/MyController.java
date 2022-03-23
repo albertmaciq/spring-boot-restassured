@@ -18,7 +18,7 @@ public class MyController {
    *
    * @return - String
    */
-  @GetMapping("/")
+  @GetMapping("/greeting")
   public String greeting() {
     return service.greet();
   }

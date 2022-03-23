@@ -21,4 +21,4 @@ spec:
   tls:
   - hosts:
     - spring-boot-restassured.52.209.128.30.nip.io
-    secretName: vassradar2-tls
+    secretName: spring-boot-restassured-tls

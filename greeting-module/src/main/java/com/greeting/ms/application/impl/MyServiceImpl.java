@@ -13,6 +13,6 @@ public class MyServiceImpl implements MyService {
    * @return - String
    */
   public String greet() {
-    return "Hello, World";
+    return "Hello World!";
   }
 }

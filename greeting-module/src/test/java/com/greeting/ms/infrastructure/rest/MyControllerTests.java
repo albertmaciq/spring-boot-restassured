@@ -34,7 +34,7 @@ public class MyControllerTests {
     // when
     // then
     this.mockMvc
-        .perform(get("/"))
+        .perform(get("/greeting"))
         .andDo(print())
         .andExpect(status().isOk())
         .andExpect(content().string(containsString("Hello, Mock")));

@@ -15,7 +15,7 @@ public class MyServiceImplTests {
   @Test
   public void greetReturnMessage() {
     // given
-    String expectedGreeting = "Hello, World";
+    String expectedGreeting = "Hello World!";
 
     // when
     String foundGreeting = myService.greet();
