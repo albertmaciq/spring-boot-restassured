@@ -20,7 +20,6 @@ public class RestAssuredGreetingTest {
             try {
                 foundGreeting = given()
                         .relaxedHTTPSValidation()
-                        .when()
                         .get("https://spring-boot-restassured.52.209.128.30.nip.io/greeting")
                         .asString();
                 if (foundGreeting != "") {
