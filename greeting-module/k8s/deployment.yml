@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: spring-boot-restassured
+  name: spring-boot-restassured
+  namespace: vass-radar-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-boot-restassured
+  template:
+    metadata:
+      labels:
+        app: spring-boot-restassured
+        role: service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      tolerations:
+        - key: "spotInstance"
+          operator: "Equal"
+          value: "true"
+          effect: "PreferNoSchedule"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: lifecycle
+                    operator: In
+                    values:
+                      - EC2Spot
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: intent
+                    operator: In
+                    values:
+                      - apps
+      containers:
+        - image: harbor.tyc.vass.es/vass-radar-app/greeting-module:0.1.0-SNAPSHOT
+          imagePullPolicy: Always
+          name: app
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: local
+            - name: JAVA_OPTS
+              value: >-
+                    -Xlog:gc
+                    -XX:+UseParallelGC
+          resources:
+            requests:
+              cpu: 210m
+              memory: 450M
+            limits:
+              cpu: 300m
+              memory: 700M
+
