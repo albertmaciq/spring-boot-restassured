@@ -1,0 +1,62 @@
+			CONCEPTOS PREVIOS:
+En un proceso de verificación de pruebas es común incluir pruebas 
+funcionales sobre el backend de la aplicación, que generalmente está
+bajo un API Rest, con el objetivo de:
+- Detectar fallos más rápidamente antes de pasar a la capa de interfaz
+de usuario.
+- Diseñar y ejecutar pruebas muy fáciles de automatizar, mantener y muy
+rápidas de ejecutar.
+
+pruebas de Interfaz de usuario  (UI tests)
+pruebas de Servicio/API/Backend (service tests)
+pruebas unitarias               (Unit tests)    
+
+^  - velocidad de ejecución    A más alto se esté + lento + integrado +
+|  + nivel de integración      de difícil mantenimiento
+|  - no. de pruebas
+
+			¿QUÉ ES REST-ASSURED?
+Es un framework escrito en Java y diseñado para simplificar las pruebas
+sobre servicios basados en REST que nos da la posibilidad de validar las
+respuestas HTTP recibidas del servidor.Este framework soporta las 
+operaciones POST,GET,PUT,DELETE,OPTIONS,PATCH y HEAD y contiene 
+herramientas para invocarlas y verificarlas.
+
+			¿POR QUÉ USAR REST-ASSURED?
+VENTAJAS:
+- Se puede integrar fácilmente con Jenkins.
+- Son fáciles de integrar con pruebas de todo tipo: funcionales, unitarias,
+integradas, etc.
+- Permite comprobar de cierta manera el estado del código, del mensaje, 
+incluso, se puede ver el cuerpo de la respuestas. Además resulta muy ´
+fácil concatenar llamadas y, en todo momento, se tiene el control del 
+código.
+- Es posible combinar con pruebas automatizadas de UI y no requiere de 
+herramientas externas para ejecutarse.
+- Totalmente codificado en Java e integrable con cualquier librería/
+framework de pruebas por separado como JUnit, TestNG o con Maven/Gradle.
+
+		¿CÓMO SE INTEGRA REST-ASSURED A UNA PRUEBA MAVEN?
+- Dependencias:
+	<dependency>
+   	   <groupId>io.rest-assured</groupId>
+   	   <artifactId>rest-assured</artifactId>
+           <version>4.3.1</version>
+   	   <scope>test</scope>
+	</dependency>
+	<dependency>
+   	   <groupId>io.rest-assured</groupId>
+   	   <artifactId>json-path</artifactId>
+   	   <version>4.3.1</version>
+   	   <scope>test</scope>
+	</dependency>
+- Localización -> src/test
+- ¿Cómo invocar los servicios?
+	1. given() -> configurará la cabecera y se enviará la petición.
+	2. then()  -> se tratará la respuesta y se aplicarán los Assertions
+		     o verificaciones de código.
+
+REFERENCIAS
+https://www.baeldung.com/rest-assured-tutorial
+https://www.sdos.es/blog/descubre-como-automatizar-service-tests-con-rest-assured
+				
